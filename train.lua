@@ -17,6 +17,7 @@ cmd:option('--saturateEpoch', 20, 'epoch at which linear decayed LR will reach m
 cmd:option('--maxEpoch', 50, 'maximum number of epochs to run')
 cmd:option('--batchSize', 10, 'mini-batch size')
 cmd:option('--createNewVocabAndExamples', true, 'create new vocabulary and examples files, keep it false if the dataset and maxVocabSize is unchanged')
+cmd:option('--numLayers', 1, 'number of LSTM layers')
 
 cmd:text()
 options = cmd:parse(arg)
@@ -39,7 +40,7 @@ print("  Vocabulary size: " .. dataset.wordsCount)
 print("         Examples: " .. dataset.examplesCount)
 
 -- Model
-model = neuralconvo.Seq2Seq(dataset.wordsCount, options.hiddenSize)
+model = neuralconvo.Seq2Seq(dataset.wordsCount, options.hiddenSize, options.numLayers)
 model.goToken = dataset.goToken
 model.eosToken = dataset.eosToken
 
