@@ -8,7 +8,7 @@ Then flips it around and get the dialog from the other character's perspective:
   { {word_ids of character2}, {word_ids of character1} }
 
 Also builds the vocabulary.
-]]-- 
+]]--
 
 local DataSet = torch.class("neuralconvo.DataSet")
 local xlua = require "xlua"
@@ -20,6 +20,8 @@ function DataSet:__init(loader, options)
 
   self.examplesFilename = "data/examples.t7"
 
+  self.prepareSourceTargetSeparately = options.prepareSourceTargetSeparately
+
   -- Reject words once vocab size reaches this threshold
   self.maxVocabSize = options.maxVocabSize or 0
 
@@ -30,6 +32,9 @@ function DataSet:__init(loader, options)
   self.loadFirst = options.loadFirst
 
   self.examples = {}
+  self.sources = {}
+  self.targets = {}
+
   self.word2id = {}
   self.id2word = {}
   self.wordsCount = 0
@@ -90,7 +95,7 @@ function DataSet:visit(conversations)
     self:visitConversation(conversation, 2)
     xlua.progress(#conversations + i, total)
   end
-  
+
   print("-- Shuffling ")
   newIdxs = torch.randperm(#self.examples)
   local sExamples = {}
@@ -101,9 +106,38 @@ function DataSet:visit(conversations)
 
   self.examplesCount = #self.examples
   self:writeExamplesToFile()
+  self:writeSeparateSourceTargetFile()
   self.examples = nil
 
   collectgarbage()
+end
+
+function writeSeparateSourceTargetFile()
+  local file
+  print("Writing Sources")
+  file = io.open("source.txt", "w")
+  io.output(file)
+  for i, example in ipairs(self.sources) do
+    io.write(formatTableAsString(example))
+    xlua.progress(i, #self.sources)
+  end
+  io.close(file)
+
+  print("Writing targets")
+  file = io.open("target.txt", "w")
+  io.output(file)
+  for i, example in ipairs(self.targets) do
+    io.write(formatTableAsString(example))
+    xlua.progress(i, #self.targets)
+  end
+  io.close(file)
+end
+
+function DataSet:formatTableAsString(example)
+  local strForTable = ""
+  for i, v in ipairs(example) do
+    strForTable = strForTable .. v .. " "
+  end
 end
 
 function DataSet:writeExamplesToFile()
@@ -148,7 +182,7 @@ function DataSet:batches(size)
       table.insert(inputSeqs, inputSeq)
       table.insert(targetSeqs, targetSeq)
     end
-    
+
     local encoderInputs,decoderInputs,decoderTargets = nil,nil,nil
     if size == 1 then
       encoderInputs = torch.IntTensor(maxInputSeqLen):fill(0)
@@ -159,7 +193,7 @@ function DataSet:batches(size)
       decoderInputs = torch.IntTensor(maxTargetOutputSeqLen-1,size):fill(0)
       decoderTargets = torch.IntTensor(maxTargetOutputSeqLen-1,size):fill(0)
     end
-    
+
     for samplenb = 1, #inputSeqs do
       for word = 1,inputSeqs[samplenb]:size(1) do
         eosOffset = maxInputSeqLen - inputSeqs[samplenb]:size(1) -- for left padding
@@ -170,7 +204,7 @@ function DataSet:batches(size)
         end
       end
     end
-    
+
     for samplenb = 1, #targetSeqs do
       trimmedEosToken = targetSeqs[samplenb]:sub(1,-2)
       for word = 1, trimmedEosToken:size(1) do
@@ -181,7 +215,7 @@ function DataSet:batches(size)
         end
       end
     end
-    
+
     for samplenb = 1, #targetSeqs do
       trimmedGoToken = targetSeqs[samplenb]:sub(2,-1)
       for word = 1, trimmedGoToken:size(1) do
@@ -214,6 +248,11 @@ function DataSet:visitConversation(lines, start)
 
         table.insert(targetIds, 1, self.goToken)
         table.insert(targetIds, self.eosToken)
+
+        if(self.prepareSourceTargetSeparately) then
+          table.insert(self.sources,inputIds)
+          table.insert(self.targets,targetIds)
+        end
 
         table.insert(self.examples, { torch.IntTensor(inputIds), torch.IntTensor(targetIds) })
       end
