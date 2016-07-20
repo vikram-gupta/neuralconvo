@@ -113,7 +113,6 @@ function DataSet:visit(conversations)
 end
 
 function DataSet:writeSeparateSourceTargetFile()
-  local file
   print("Writing Sources")
   local srcFile = io.open("source.txt", "w")
   for i=1,#self.sources do
@@ -124,7 +123,7 @@ function DataSet:writeSeparateSourceTargetFile()
 
   print("Writing targets")
   local targetFile = io.open("target.txt", "w")
-  for i, example in ipairs(self.targets) do
+  for i=1,#self.targets do
     targetFile:write(self.formatTableAsString(self.targets[i]))
     xlua.progress(i, #self.targets)
   end
