@@ -135,6 +135,7 @@ function DataSet:formatTableAsString(example)
   for i=1,#example do
     strForTable = strForTable .. example[i] .. " "
   end
+  return strForTable
 end
 
 function DataSet:writeExamplesToFile()
