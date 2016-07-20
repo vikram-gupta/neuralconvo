@@ -118,7 +118,7 @@ function DataSet:writeSeparateSourceTargetFile()
   file = io.open("source.txt", "w")
   io.output(file)
   for i, example in ipairs(self.sources) do
-    io.write(formatTableAsString(example))
+    io.write(self.formatTableAsString(example))
     xlua.progress(i, #self.sources)
   end
   io.close(file)
@@ -127,7 +127,7 @@ function DataSet:writeSeparateSourceTargetFile()
   file = io.open("target.txt", "w")
   io.output(file)
   for i, example in ipairs(self.targets) do
-    io.write(formatTableAsString(example))
+    io.write(self.formatTableAsString(example))
     xlua.progress(i, #self.targets)
   end
   io.close(file)
