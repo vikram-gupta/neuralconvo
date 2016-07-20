@@ -112,7 +112,7 @@ function DataSet:visit(conversations)
   collectgarbage()
 end
 
-function writeSeparateSourceTargetFile()
+function DataSet:writeSeparateSourceTargetFile()
   local file
   print("Writing Sources")
   file = io.open("source.txt", "w")
