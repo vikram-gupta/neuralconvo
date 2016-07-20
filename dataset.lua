@@ -132,8 +132,8 @@ end
 
 function DataSet:formatTableAsString(example)
   local strForTable = ""
-  for i, v in ipairs(example) do
-    strForTable = strForTable .. v .. " "
+  for i=1,#example do
+    strForTable = strForTable .. example[i] .. " "
   end
 end
 
