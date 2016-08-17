@@ -10,17 +10,23 @@ end
 
 function Seq2Seq:buildModel()
   self.encoder = nn.Sequential()
-  self.encoder:add(nn.LookupTableMaskZero(self.vocabSize, self.hiddenSize))
-  self.encoderLSTM = nn.LSTM(self.hiddenSize, self.hiddenSize):maskZero(1)
+  self.encoder:add(nn.LookupTable(self.vocabSize, self.hiddenSize))
+  --self.encoder:add(nn.LookupTableMaskZero(self.vocabSize, self.hiddenSize))
+  self.encoderLSTM = nn.LSTM(self.hiddenSize, self.hiddenSize)
+  --self.encoderLSTM = nn.LSTM(self.hiddenSize, self.hiddenSize):maskZero(1)
   self.encoder:add(nn.Sequencer(self.encoderLSTM))
   self.encoder:add(nn.Select(1,-1))
 
   self.decoder = nn.Sequential()
-  self.decoder:add(nn.LookupTableMaskZero(self.vocabSize, self.hiddenSize))
-  self.decoderLSTM = nn.LSTM(self.hiddenSize, self.hiddenSize):maskZero(1)
+  self.decoder:add(nn.LookupTable(self.vocabSize, self.hiddenSize))
+  --self.decoder:add(nn.LookupTableMaskZero(self.vocabSize, self.hiddenSize))
+  self.decoderLSTM = nn.LSTM(self.hiddenSize, self.hiddenSize)
+  --self.decoderLSTM = nn.LSTM(self.hiddenSize, self.hiddenSize):maskZero(1)
   self.decoder:add(nn.Sequencer(self.decoderLSTM))
-  self.decoder:add(nn.Sequencer(nn.MaskZero(nn.Linear(self.hiddenSize, self.vocabSize),1)))
-  self.decoder:add(nn.Sequencer(nn.MaskZero(nn.LogSoftMax(),1)))
+  self.decoder:add(nn.Sequencer(nn.Linear(self.hiddenSize, self.vocabSize)))
+  --self.decoder:add(nn.Sequencer(nn.MaskZero(nn.Linear(self.hiddenSize, self.vocabSize),1)))
+  self.decoder:add(nn.Sequencer(nn.LogSoftMax()))
+  --self.decoder:add(nn.Sequencer(nn.MaskZero(nn.LogSoftMax(),1)))
 
   self.encoder:zeroGradParameters()
   self.decoder:zeroGradParameters()
@@ -122,7 +128,7 @@ function Seq2Seq:eval(input)
 
     table.insert(predictions, wordIds)
     table.insert(probabilities, prob)
-  end 
+  end
 
   self.decoder:forget()
   self.encoder:forget()
